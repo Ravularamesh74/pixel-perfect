@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { staggerContainer, staggerItem } from '@/components/ScrollReveal';
 import {
   Car,
   Headset,
@@ -43,16 +44,19 @@ export const Features = () => {
         </motion.div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuresData.map((feature, index) => {
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-80px' }}
+        >
+          {featuresData.map((feature) => {
             const IconComponent = iconMap[feature.icon] || Car;
             return (
               <motion.div
                 key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                variants={staggerItem}
                 className="group p-6 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-xl transition-all duration-300 text-center"
               >
                 <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all duration-300">
@@ -67,7 +71,7 @@ export const Features = () => {
               </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

@@ -8,6 +8,7 @@ import { Services } from '@/components/sections/Services';
 import { Testimonials } from '@/components/sections/Testimonials';
 import { ContactCTA } from '@/components/sections/ContactCTA';
 import { BookingForm } from '@/components/sections/BookingForm';
+import { WhatsAppButton } from '@/components/WhatsAppButton';
 
 const Index = () => {
   return (
@@ -24,6 +25,7 @@ const Index = () => {
         <ContactCTA />
       </main>
       <Footer />
+      <WhatsAppButton />
     </div>
   );
 };

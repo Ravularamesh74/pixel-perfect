@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { staggerContainer, staggerItem } from '@/components/ScrollReveal';
 import { Star, Quote } from 'lucide-react';
 import { testimonialsData } from '@/data/cars';
 
@@ -22,14 +23,17 @@ export const Testimonials = () => {
         </motion.div>
 
         {/* Testimonials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {testimonialsData.map((testimonial, index) => (
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-80px' }}
+        >
+          {testimonialsData.map((testimonial) => (
             <motion.div
               key={testimonial.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
+              variants={staggerItem}
               className="bg-card rounded-2xl p-6 shadow-lg border border-border hover:shadow-xl hover:border-primary/20 transition-all duration-300"
             >
               {/* Quote Icon */}
@@ -59,7 +63,7 @@ export const Testimonials = () => {
               </div>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
