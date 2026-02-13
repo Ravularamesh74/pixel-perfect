@@ -121,18 +121,18 @@ export const Footer = () => {
               <li>
                 <a href="tel:+919876543210" className="flex items-start gap-3 text-sm text-white/70 hover:text-accent transition-colors">
                   <Phone className="h-4 w-4 mt-0.5 shrink-0" />
-                  <span>+91 98765 43210</span>
+                  <span>+91 9640059577</span>
                 </a>
               </li>
               <li>
-                <a href="mailto:info@mallikarjunatravels.com" className="flex items-start gap-3 text-sm text-white/70 hover:text-accent transition-colors">
+                <a href="mailto:info@mallikarjunatravels9771@gmail.com" className="flex items-start gap-3 text-sm text-white/70 hover:text-accent transition-colors">
                   <Mail className="h-4 w-4 mt-0.5 shrink-0" />
-                  <span>info@mallikarjunatravels.com</span>
+                  <span>mallikarjunatravels9771@gmail.com </span>
                 </a>
               </li>
               <li className="flex items-start gap-3 text-sm text-white/70">
                 <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                <span>123 Travel Hub, MG Road,<br />Bangalore - 560001</span>
+                <span> Skandagiri Temple Padmarao Nagar Secunderabad,<br />Telangana - 500021</span>
               </li>
             </ul>
           </div>

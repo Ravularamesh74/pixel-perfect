@@ -6,20 +6,20 @@ const contactMethods = [
   {
     icon: Phone,
     label: 'Call Us 24/7',
-    value: '+91 98765 43210',
-    href: 'tel:+919876543210',
+    value: '+91 7989345281',
+    href: 'tel:+917989345281',
   },
   {
     icon: Mail,
     label: 'Email Us',
-    value: 'info@mallikarjunatravels.com',
-    href: 'mailto:info@mallikarjunatravels.com',
+    value: 'mallikarjunatravels9771@gmail.com',
+    href: 'mailto:mallikarjunatravels9771@gmail.com',
   },
   {
     icon: MessageCircle,
     label: 'Chat on WhatsApp',
-    value: '+91 98765 43210',
-    href: 'https://wa.me/919876543210',
+    value: '+91 7989345281',
+    href: 'https://wa.me/917989345281',
   },
 ];
 
@@ -74,7 +74,7 @@ export const ContactCTA = () => {
               asChild
               className="border-2 border-white/30 text-white bg-white/5 hover:bg-white/10 hover:border-white/50 font-semibold text-lg px-8 py-6"
             >
-              <a href="tel:+919876543210">
+              <a href="tel:+917989345281">
                 <Phone className="mr-2 h-5 w-5" />
                 Call Us
               </a>

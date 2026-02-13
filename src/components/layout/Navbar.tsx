@@ -123,14 +123,15 @@ export const Navbar = () => {
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-4">
             <a
-              href="tel:+919876543210"
+              href="tel:+917989345281"
               className={cn(
                 "flex items-center gap-2 text-sm font-medium transition-colors",
                 isScrolled ? "text-foreground hover:text-primary" : "text-white hover:text-accent"
               )}
             >
               <Phone className="h-4 w-4" />
-              <span>+91 98765 43210</span>
+              <span>+91 7989345281</span>
+              <span>+91 9640059577</span>
             </a>
             <Button
               onClick={() => scrollToSection('#booking')}
@@ -181,11 +182,12 @@ export const Navbar = () => {
           ))}
           <div className="pt-4 border-t space-y-4">
             <a
-              href="tel:+919876543210"
+              href="tel:+917989345281"
               className="flex items-center gap-2 py-3 px-4 text-foreground"
             >
               <Phone className="h-4 w-4" />
-              <span>+91 98765 43210</span>
+              <span>+91 7989345281</span>
+              <span>+91 9640059577</span>
             </a>
             <Button
               onClick={() => scrollToSection('#booking')}
