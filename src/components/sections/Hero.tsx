@@ -1,111 +1,130 @@
-import { motion } from 'framer-motion';
-import { ArrowRight, Shield, Clock, Award } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import heroImage from '@/assets/hero-car.jpg';
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowRight, Shield, Clock, Award } from "lucide-react";
+import { useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import heroImage from "@/assets/hero-car.jpg";
 
-const trustIndicators = [
-  { icon: Award, text: '10+ Years Experience' },
-  { icon: Shield, text: '500+ Happy Customers' },
-  { icon: Clock, text: '24/7 Support' },
+const COMPANY = {
+  name: "Mallikarjuna Travels",
+  tagline: "Premium Car Rental Services in Secunderabad & Hyderabad",
+  description:
+    "Experience premium car rentals with unmatched comfort, safety, and 24/7 support. Trusted by 500+ happy customers.",
+};
+
+const TRUST_INDICATORS = [
+  { icon: Award, text: "10+ Years Experience" },
+  { icon: Shield, text: "500+ Happy Customers" },
+  { icon: Clock, text: "24/7 Support" },
 ];
 
 export const Hero = () => {
-  const scrollToSection = (id: string) => {
+  const prefersReducedMotion = useReducedMotion();
+
+  const scrollToSection = useCallback((id: string) => {
+    if (typeof window === "undefined") return;
+
     const element = document.getElementById(id);
-    if (element) {
-      const offset = 80;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
-      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-    }
-  };
+    if (!element) return;
+
+    const offset = 80;
+    const position =
+      element.getBoundingClientRect().top + window.pageYOffset - offset;
+
+    window.scrollTo({ top: position, behavior: "smooth" });
+  }, []);
+
+  const animationProps = prefersReducedMotion
+    ? {}
+    : {
+        initial: { opacity: 0, y: 30 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.6 },
+      };
 
   return (
-    <section id="home" className="relative min-h-screen flex items-center overflow-hidden">
-      {/* Background Image with Overlay */}
+    <header
+      id="home"
+      role="banner"
+      className="relative min-h-screen flex items-center overflow-hidden"
+    >
+      {/* Background */}
       <div className="absolute inset-0">
         <img
           src={heroImage}
-          alt="Premium car rental"
+          alt="Luxury car rental service in Secunderabad"
           className="w-full h-full object-cover"
+          loading="eager"
+          fetchPriority="high"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-primary-900/95 via-primary-800/90 to-primary-700/80" />
-        <div className="absolute inset-0 bg-gradient-to-t from-primary-900/50 to-transparent" />
       </div>
 
       {/* Content */}
-      <div className="container-custom relative z-10 pt-24 pb-16 md:pt-32 md:pb-24">
+      <div className="container-custom relative z-10 pt-24 pb-16">
         <div className="max-w-3xl">
+
           {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
+          <motion.div {...animationProps}>
             <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 text-accent text-sm font-medium border border-accent/30 backdrop-blur-sm">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
               Trusted Since 2014
             </span>
           </motion.div>
 
-          {/* Main Headline */}
+          {/* Headline */}
           <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="mt-6 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-white leading-tight"
+            {...animationProps}
+            className="mt-6 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight"
           >
-            Welcome to{' '}
-            <span className="text-accent">Mallikarjuna</span>
+            {COMPANY.name}
             <br />
-            Travels
+            <span className="text-accent text-3xl md:text-4xl block mt-3">
+              {COMPANY.tagline}
+            </span>
           </motion.h1>
 
-          {/* Subtitle */}
+          {/* Description */}
           <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mt-6 text-lg sm:text-xl md:text-2xl text-white/90 leading-relaxed max-w-2xl"
+            {...animationProps}
+            transition={{ delay: 0.2 }}
+            className="mt-6 text-lg md:text-xl text-white/90 leading-relaxed max-w-2xl"
           >
-            Experience Premium Car Rentals with Unmatched Comfort and Reliability. Your Journey, Our Commitment.
+            {COMPANY.description}
           </motion.p>
 
-          {/* CTA Buttons */}
+          {/* CTA */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
+            {...animationProps}
+            transition={{ delay: 0.3 }}
             className="mt-10 flex flex-col sm:flex-row gap-4"
           >
             <Button
               size="lg"
-              onClick={() => scrollToSection('booking')}
-              className="bg-accent hover:bg-accent-light text-accent-foreground font-semibold text-lg px-8 py-6 shadow-lg hover:shadow-xl hover:shadow-accent/20 transition-all group"
+              onClick={() => scrollToSection("booking")}
+              className="bg-accent hover:bg-accent-light font-semibold text-lg px-8 py-6 shadow-lg"
             >
-              Book Your Ride Now
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              Book Your Ride
+              <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
+
             <Button
               size="lg"
               variant="outline"
-              onClick={() => scrollToSection('fleet')}
-              className="border-2 border-white/30 text-white bg-white/5 hover:bg-white/10 hover:border-white/50 font-semibold text-lg px-8 py-6 backdrop-blur-sm"
+              onClick={() => scrollToSection("fleet")}
+              className="border-white/40 text-white bg-white/5 hover:bg-white/10"
             >
-              Explore Our Fleet
+              View Fleet
             </Button>
           </motion.div>
 
           {/* Trust Indicators */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mt-12 flex flex-wrap gap-6 md:gap-10"
+            {...animationProps}
+            transition={{ delay: 0.4 }}
+            className="mt-12 flex flex-wrap gap-8"
           >
-            {trustIndicators.map((item, index) => (
+            {TRUST_INDICATORS.map((item, index) => (
               <div key={index} className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-white/10 backdrop-blur-sm">
+                <div className="p-2 rounded-lg bg-white/10">
                   <item.icon className="h-5 w-5 text-accent" />
                 </div>
                 <span className="text-sm md:text-base text-white/90 font-medium">
@@ -116,22 +135,6 @@ export const Hero = () => {
           </motion.div>
         </div>
       </div>
-
-      {/* Scroll Indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden md:block"
-      >
-        <div className="w-6 h-10 rounded-full border-2 border-white/30 flex items-start justify-center p-1.5">
-          <motion.div
-            animate={{ y: [0, 12, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-1.5 h-3 rounded-full bg-accent"
-          />
-        </div>
-      </motion.div>
-    </section>
+    </header>
   );
 };

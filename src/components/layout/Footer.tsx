@@ -1,70 +1,130 @@
-import { Car, Phone, Mail, MapPin, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
+import React, { memo, useCallback } from "react";
+import {
+  Car,
+  Phone,
+  Mail,
+  MapPin,
+  Facebook,
+  Instagram,
+  Twitter,
+  Linkedin,
+} from "lucide-react";
 
-const footerLinks = {
+interface FooterLink {
+  label: string;
+  href: string;
+  external?: boolean;
+}
+
+const COMPANY_INFO = {
+  name: "Mallikarjuna Travels",
+  phone: "+919640059577",
+  email: "mallikarjunatravels9771@gmail.com",
+  address:
+    "Skandagiri Temple, Padmarao Nagar, Secunderabad, Telangana - 500021",
+};
+
+const footerLinks: {
+  quickLinks: FooterLink[];
+  services: FooterLink[];
+} = {
   quickLinks: [
-    { label: 'Home', href: '#home' },
-    { label: 'Our Fleet', href: '#fleet' },
-    { label: 'Services', href: '#services' },
-    { label: 'About Us', href: '#about' },
-    { label: 'Contact', href: '#contact' },
+    { label: "Home", href: "#home" },
+    { label: "Our Fleet", href: "#fleet" },
+    { label: "Services", href: "#services" },
+    { label: "About Us", href: "#about" },
+    { label: "Contact", href: "#contact" },
   ],
   services: [
-    { label: 'Airport Transfers', href: '#services' },
-    { label: 'Outstation Travel', href: '#services' },
-    { label: 'Corporate Rentals', href: '#services' },
-    { label: 'Wedding & Events', href: '#services' },
-    { label: 'Monthly Rentals', href: '#services' },
+    { label: "Airport Transfers", href: "#services" },
+    { label: "Outstation Travel", href: "#services" },
+    { label: "Corporate Rentals", href: "#services" },
+    { label: "Wedding & Events", href: "#services" },
+    { label: "Monthly Rentals", href: "#services" },
   ],
 };
 
 const socialLinks = [
-  { icon: Facebook, href: '#', label: 'Facebook' },
-  { icon: Instagram, href: '#', label: 'Instagram' },
-  { icon: Twitter, href: '#', label: 'Twitter' },
-  { icon: Linkedin, href: '#', label: 'LinkedIn' },
+  { icon: Facebook, href: "https://facebook.com", label: "Facebook" },
+  { icon: Instagram, href: "https://instagram.com", label: "Instagram" },
+  { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
+  { icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
 ];
 
-export const Footer = () => {
-  const scrollToSection = (href: string) => {
+const FooterLinkItem = memo(
+  ({ link, onClick }: { link: FooterLink; onClick?: (href: string) => void }) => (
+    <li>
+      <a
+        href={link.href}
+        onClick={(e) => {
+          if (!link.external && onClick) {
+            e.preventDefault();
+            onClick(link.href);
+          }
+        }}
+        target={link.external ? "_blank" : undefined}
+        rel={link.external ? "noopener noreferrer" : undefined}
+        className="text-sm text-white/70 hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded"
+      >
+        {link.label}
+      </a>
+    </li>
+  )
+);
+
+export const Footer = memo(() => {
+  const scrollToSection = useCallback((href: string) => {
+    if (typeof window === "undefined") return;
+
     const element = document.querySelector(href);
     if (element) {
       const offset = 80;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
-      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+      const position =
+        element.getBoundingClientRect().top + window.pageYOffset - offset;
+
+      window.scrollTo({ top: position, behavior: "smooth" });
     }
-  };
+  }, []);
 
   return (
-    <footer className="bg-primary-900 text-white">
+    <footer
+      className="bg-primary-900 text-white"
+      role="contentinfo"
+      aria-label="Website Footer"
+    >
       <div className="container-custom pt-16 pb-8">
-        {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+          
           {/* Company Info */}
           <div className="space-y-6">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-lg bg-accent">
                 <Car className="h-6 w-6 text-white" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-heading font-bold text-lg leading-tight">
+              <div>
+                <h2 className="font-bold text-lg leading-tight">
                   Mallikarjuna
-                </span>
-                <span className="text-xs font-medium tracking-wider uppercase text-white/70">
+                </h2>
+                <span className="text-xs uppercase tracking-wider text-white/70">
                   Travels
                 </span>
               </div>
             </div>
+
             <p className="text-sm text-white/70 leading-relaxed">
-              Your trusted partner for premium car rentals across India. Experience comfort, reliability, and exceptional service on every journey.
+              Premium car rental services across India. Reliable fleet,
+              professional drivers, and seamless booking experience.
             </p>
+
             <div className="flex gap-3">
               {socialLinks.map((social) => (
                 <a
                   key={social.label}
                   href={social.href}
-                  aria-label={social.label}
-                  className="p-2.5 rounded-lg bg-white/10 hover:bg-accent transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Visit our ${social.label}`}
+                  className="p-2.5 rounded-lg bg-white/10 hover:bg-accent transition-colors focus:ring-2 focus:ring-accent"
                 >
                   <social.icon className="h-4 w-4" />
                 </a>
@@ -74,84 +134,81 @@ export const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-heading font-semibold text-lg mb-6">Quick Links</h3>
+            <h3 className="font-semibold text-lg mb-6">Quick Links</h3>
             <ul className="space-y-3">
               {footerLinks.quickLinks.map((link) => (
-                <li key={link.label}>
-                  <a
-                    href={link.href}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      scrollToSection(link.href);
-                    }}
-                    className="text-sm text-white/70 hover:text-accent transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                </li>
+                <FooterLinkItem
+                  key={link.label}
+                  link={link}
+                  onClick={scrollToSection}
+                />
               ))}
             </ul>
           </div>
 
           {/* Services */}
           <div>
-            <h3 className="font-heading font-semibold text-lg mb-6">Our Services</h3>
+            <h3 className="font-semibold text-lg mb-6">Our Services</h3>
             <ul className="space-y-3">
               {footerLinks.services.map((link) => (
-                <li key={link.label}>
-                  <a
-                    href={link.href}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      scrollToSection(link.href);
-                    }}
-                    className="text-sm text-white/70 hover:text-accent transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                </li>
+                <FooterLinkItem
+                  key={link.label}
+                  link={link}
+                  onClick={scrollToSection}
+                />
               ))}
             </ul>
           </div>
 
           {/* Contact Info */}
           <div>
-            <h3 className="font-heading font-semibold text-lg mb-6">Contact Us</h3>
-            <ul className="space-y-4">
+            <h3 className="font-semibold text-lg mb-6">Contact Us</h3>
+            <ul className="space-y-4 text-sm text-white/70">
               <li>
-                <a href="tel:+919876543210" className="flex items-start gap-3 text-sm text-white/70 hover:text-accent transition-colors">
-                  <Phone className="h-4 w-4 mt-0.5 shrink-0" />
-                  <span>+91 9640059577</span>
+                <a
+                  href={`tel:${COMPANY_INFO.phone}`}
+                  className="flex items-start gap-3 hover:text-accent transition-colors"
+                >
+                  <Phone className="h-4 w-4 mt-0.5" />
+                  {COMPANY_INFO.phone}
                 </a>
               </li>
               <li>
-                <a href="mailto:info@mallikarjunatravels9771@gmail.com" className="flex items-start gap-3 text-sm text-white/70 hover:text-accent transition-colors">
-                  <Mail className="h-4 w-4 mt-0.5 shrink-0" />
-                  <span>mallikarjunatravels9771@gmail.com </span>
+                <a
+                  href={`mailto:${COMPANY_INFO.email}`}
+                  className="flex items-start gap-3 hover:text-accent transition-colors"
+                >
+                  <Mail className="h-4 w-4 mt-0.5" />
+                  {COMPANY_INFO.email}
                 </a>
               </li>
-              <li className="flex items-start gap-3 text-sm text-white/70">
-                <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                <span> Skandagiri Temple Padmarao Nagar Secunderabad,<br />Telangana - 500021</span>
+              <li className="flex items-start gap-3">
+                <MapPin className="h-4 w-4 mt-0.5" />
+                {COMPANY_INFO.address}
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="border-t border-white/10 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-white/50">
-              © {new Date().getFullYear()} Mallikarjuna Travels. All rights reserved.
-            </p>
-            <div className="flex gap-6 text-sm text-white/50">
-              <a href="#" className="hover:text-accent transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-accent transition-colors">Terms & Conditions</a>
-              <a href="#" className="hover:text-accent transition-colors">Refund Policy</a>
-            </div>
+        {/* Bottom */}
+        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-white/50">
+          <p>
+            © {new Date().getFullYear()} {COMPANY_INFO.name}. All rights
+            reserved.
+          </p>
+          <div className="flex gap-6">
+            <a href="/privacy-policy" className="hover:text-accent">
+              Privacy Policy
+            </a>
+            <a href="/terms" className="hover:text-accent">
+              Terms & Conditions
+            </a>
+            <a href="/refund-policy" className="hover:text-accent">
+              Refund Policy
+            </a>
           </div>
         </div>
       </div>
     </footer>
   );
-};
+});
