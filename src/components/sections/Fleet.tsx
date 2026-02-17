@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Fuel, Cog, Wind, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -93,10 +93,38 @@ const CarCard = ({ car, onSelect }: CarCardProps) => {
 
 export const Fleet = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [cars, setCars] = useState<Car[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCars = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/cars');
+        const result = await response.json();
+        if (response.ok) {
+          // Map backend _id to id for frontend compatibility
+          const mappedCars = result.data.cars.map((car: any) => ({
+            ...car,
+            id: car._id,
+          }));
+          setCars(mappedCars);
+        } else {
+          setError(result.message || 'Failed to fetch cars');
+        }
+      } catch (err) {
+        setError('Connection error. Please make sure the backend is running.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCars();
+  }, []);
 
   const filteredCars = selectedCategory === 'all'
-    ? carsData
-    : carsData.filter(car => car.category === selectedCategory);
+    ? cars
+    : cars.filter(car => car.category.toLowerCase() === selectedCategory.toLowerCase());
 
   const handleCarSelect = (car: Car) => {
     // Scroll to booking form with car pre-selected

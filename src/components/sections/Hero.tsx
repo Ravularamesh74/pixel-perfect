@@ -9,6 +9,7 @@ const COMPANY = {
   tagline: "Premium Car Rental Services in Secunderabad & Hyderabad",
   description:
     "Experience premium car rentals with unmatched comfort, safety, and 24/7 support. Trusted by 500+ happy customers.",
+  slogan: "Driven by Trust. Defined by Comfort.",
 };
 
 const TRUST_INDICATORS = [

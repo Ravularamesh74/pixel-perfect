@@ -13,6 +13,9 @@ import {
   ChevronLeft,
   Loader2,
   X,
+  Check,
+  Users,
+  Star,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -111,37 +114,90 @@ export const BookingForm = () => {
   const { register, handleSubmit, watch, setValue, formState: { errors } } = form;
   const watchedValues = watch();
 
-  // Check for pre-selected car from Fleet section
+  const [cars, setCars] = useState<CarType[]>([]);
+  const [isCarsLoading, setIsCarsLoading] = useState(true);
+  const [distance, setDistance] = useState<number>(0);
+
+  // Calculate distance when locations change
+  useEffect(() => {
+    if (watchedValues.pickupLocation && watchedValues.dropoffLocation) {
+      // Logic to fetch distance from backend
+      // Using the simulated route endpoint
+      const fetchRoute = async () => {
+        try {
+          const res = await fetch(`http://localhost:5000/api/maps/route?from=${watchedValues.pickupLocation}&to=${watchedValues.dropoffLocation}`);
+          const data = await res.json();
+          if (res.ok) {
+            setDistance(data.distance);
+          }
+        } catch (error) {
+          console.error("Failed to calculate distance");
+        }
+      };
+
+      // Debounce slightly or just call
+      const timer = setTimeout(fetchRoute, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [watchedValues.pickupLocation, watchedValues.dropoffLocation]);
+
+  useEffect(() => {
+    const fetchCars = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/cars');
+        const result = await response.json();
+        if (response.ok) {
+          const mappedCars = result.data.cars.map((car: any) => ({
+            ...car,
+            id: car._id,
+          }));
+          setCars(mappedCars);
+        }
+      } catch (err) {
+        console.error('Failed to fetch cars:', err);
+      } finally {
+        setIsCarsLoading(false);
+      }
+    };
+    fetchCars();
+  }, []);
+
+  // Pre-select car if coming from Fleet section
   useEffect(() => {
     const savedCar = sessionStorage.getItem('selectedCar');
     if (savedCar) {
-      const car = JSON.parse(savedCar) as CarType;
-      setPreSelectedCar(car);
-      setValue('selectedCarId', car.id);
-      sessionStorage.removeItem('selectedCar');
+      try {
+        const car = JSON.parse(savedCar);
+        // Ensure we use the mapped id (_id from backend)
+        const carId = car.id || car._id;
+        setValue('selectedCarId', carId);
+        setCurrentStep(2); // Jump to date selection
+        sessionStorage.removeItem('selectedCar'); // Clear after use
+      } catch (e) {
+        console.error('Error parsing saved car:', e);
+      }
     }
   }, [setValue]);
 
   // Calculate pricing
-  const selectedCar = carsData.find(car => car.id === watchedValues.selectedCarId);
+  const selectedCar = cars.find(car => car.id === watchedValues.selectedCarId);
   const calculateDuration = () => {
     if (!watchedValues.pickupDate || !watchedValues.dropoffDate) return { days: 0, hours: 0 };
     const start = new Date(`${watchedValues.pickupDate} ${watchedValues.pickupTime}`);
     const end = new Date(`${watchedValues.dropoffDate} ${watchedValues.dropoffTime}`);
     const diffMs = end.getTime() - start.getTime();
+    const totalDays = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
     const totalHours = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60)));
-    const days = Math.floor(totalHours / 24);
-    const hours = totalHours % 24;
-    return { days, hours };
+    return { days: totalDays, hours: totalHours % 24 };
   };
 
   const duration = calculateDuration();
-  const basePrice = selectedCar ? selectedCar.pricePerDay * Math.max(1, duration.days) : 0;
+  const basePrice = selectedCar ? selectedCar.pricePerDay * duration.days : 0;
   const servicesTotal = selectedServices.reduce((total, serviceId) => {
     const service = additionalServicesData.find(s => s.id === serviceId);
     if (!service) return total;
     if (service.priceType === 'perDay') {
-      return total + service.price * Math.max(1, duration.days);
+      return total + service.price * duration.days;
     }
     return total + service.price;
   }, 0);
@@ -152,13 +208,17 @@ export const BookingForm = () => {
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1:
-        return !!(watchedValues.fullName && watchedValues.email && watchedValues.phone);
+        return !!(watchedValues.fullName && watchedValues.email && watchedValues.phone) &&
+          !errors.fullName && !errors.email && !errors.phone;
       case 2:
-        return !!(watchedValues.pickupLocation && watchedValues.dropoffLocation && watchedValues.pickupDate && watchedValues.dropoffDate);
+        return !!(watchedValues.pickupLocation && watchedValues.dropoffLocation &&
+          watchedValues.pickupDate && watchedValues.dropoffDate) &&
+          !errors.pickupLocation && !errors.pickupDate && !errors.dropoffDate;
       case 3:
-        return !!watchedValues.selectedCarId;
+        return !!watchedValues.selectedCarId && !errors.selectedCarId;
       case 4:
-        return !!(watchedValues.purposeOfTravel && watchedValues.agreeToTerms);
+        return !!(watchedValues.purposeOfTravel && watchedValues.agreeToTerms) &&
+          !errors.purposeOfTravel && !errors.agreeToTerms;
       default:
         return false;
     }
@@ -177,17 +237,138 @@ export const BookingForm = () => {
   };
 
   const onSubmit = async (data: BookingFormData) => {
+    // Check for errors in earlier steps that might have been missed
+    if (!validateStep(1)) { setCurrentStep(1); return; }
+    if (!validateStep(2)) { setCurrentStep(2); return; }
+    if (!validateStep(3)) { setCurrentStep(3); return; }
+    if (!validateStep(4)) { setCurrentStep(4); return; }
+
     setIsSubmitting(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const id = `MTB-2025-${Math.floor(Math.random() * 10000).toString().padStart(5, '0')}`;
-    setBookingId(id);
-    setShowSuccess(true);
-    setIsSubmitting(false);
-    
-    console.log('Booking Data:', { ...data, additionalServices: selectedServices, pricing: { basePrice, servicesTotal, tax, total } });
+
+    try {
+      // 1. Create Booking
+      const bookingResponse = await fetch('http://localhost:5000/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          carId: data.selectedCarId,
+          pickupDate: data.pickupDate,
+          pickupTime: data.pickupTime,
+          dropoffDate: data.dropoffDate,
+          dropoffTime: data.dropoffTime,
+          pickupLocation: data.pickupLocation,
+          dropoffLocation: data.dropoffLocation,
+          services: selectedServices,
+          customerName: data.fullName,
+          customerEmail: data.email,
+          customerPhone: data.phone,
+          specialRequests: data.specialRequests,
+          purposeOfTravel: data.purposeOfTravel
+        }),
+      });
+
+      const bookingResult = await bookingResponse.json();
+
+      if (!bookingResponse.ok) {
+        throw new Error(bookingResult.message || 'Failed to create booking');
+      }
+
+      const bookingIdFromDb = bookingResult.data.booking._id;
+      const displayBookingId = bookingResult.data.booking.bookingId;
+
+      // 2. Create Razorpay Order
+      const orderResponse = await fetch('http://localhost:5000/api/payments/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bookingId: bookingIdFromDb }),
+      });
+
+      const orderResult = await orderResponse.json();
+
+      if (!orderResponse.ok) {
+        throw new Error(orderResult.message || 'Failed to create payment order');
+      }
+
+      const order = orderResult.data.order;
+
+      // 3. Open Razorpay Checkout
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_placeholder', // Should be in env
+        amount: order.amount,
+        currency: order.currency,
+        name: "Mallikarjuna Travels",
+        description: `Booking for ${selectedCar?.name}`,
+        order_id: order.id,
+        handler: async (response: any) => {
+          try {
+            // 4. Verify Payment
+            const verifyResponse = await fetch('http://localhost:5000/api/payments/verify', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                bookingId: bookingIdFromDb
+              }),
+            });
+
+            const verifyResult = await verifyResponse.json();
+
+            if (!verifyResponse.ok) {
+              throw new Error(verifyResult.message || 'Payment verification failed');
+            }
+
+            setBookingId(displayBookingId);
+            setShowSuccess(true);
+            toast({
+              title: "Payment Successful",
+              description: "Your booking has been confirmed.",
+            });
+          } catch (error: any) {
+            toast({
+              title: "Payment Verification Failed",
+              description: error.message || "Please contact support if amount was deducted.",
+              variant: "destructive",
+            });
+          }
+        },
+        prefill: {
+          name: data.fullName,
+          email: data.email,
+          contact: data.phone,
+        },
+        theme: {
+          color: "#2563eb",
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any) {
+        toast({
+          title: "Payment Failed",
+          description: response.error.description,
+          variant: "destructive",
+        });
+      });
+      rzp.open();
+
+    } catch (error: any) {
+      console.error('Booking/Payment Error:', error);
+      toast({
+        title: "Booking Failed",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const today = new Date().toISOString().split('T')[0];
@@ -270,7 +451,7 @@ export const BookingForm = () => {
                       className="space-y-6"
                     >
                       <h3 className="text-xl font-heading font-semibold text-foreground">Your Information</h3>
-                      
+
                       <div className="space-y-4">
                         <div>
                           <Label htmlFor="fullName">Full Name *</Label>
@@ -347,7 +528,7 @@ export const BookingForm = () => {
                       className="space-y-6"
                     >
                       <h3 className="text-xl font-heading font-semibold text-foreground">Journey Details</h3>
-                      
+
                       <div className="grid sm:grid-cols-2 gap-4">
                         <div>
                           <Label>Pick-up Location *</Label>
@@ -453,26 +634,58 @@ export const BookingForm = () => {
                       className="space-y-6"
                     >
                       <h3 className="text-xl font-heading font-semibold text-foreground">Choose Your Vehicle</h3>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {carsData.slice(0, 9).map((car) => (
-                          <div
-                            key={car.id}
-                            onClick={() => setValue('selectedCarId', car.id)}
-                            className={cn(
-                              'cursor-pointer rounded-xl border-2 overflow-hidden transition-all hover:shadow-lg',
-                              watchedValues.selectedCarId === car.id
-                                ? 'border-primary shadow-lg ring-2 ring-primary/20'
-                                : 'border-border hover:border-primary/50'
-                            )}
-                          >
-                            <img src={car.image} alt={car.name} className="w-full aspect-video object-cover" />
-                            <div className="p-3">
-                              <p className="font-medium text-sm truncate">{car.name}</p>
-                              <p className="text-primary font-semibold">₹{car.pricePerDay.toLocaleString()}/day</p>
-                            </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {isCarsLoading ? (
+                          <div className="col-span-full flex flex-col items-center justify-center py-12 gap-4">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            <p className="text-muted-foreground">Fetching our latest fleet...</p>
                           </div>
-                        ))}
+                        ) : cars.length === 0 ? (
+                          <div className="col-span-full text-center py-12">
+                            <p className="text-muted-foreground">No cars available at the moment. Please check back later.</p>
+                          </div>
+                        ) : (
+                          cars.map((car) => (
+                            <motion.div
+                              key={car.id}
+                              whileHover={{ y: -4 }}
+                              className={cn(
+                                "relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-300",
+                                watchedValues.selectedCarId === car.id
+                                  ? "border-primary bg-primary/5 shadow-md ring-1 ring-primary/20"
+                                  : "border-border bg-card hover:border-primary/50 hover:shadow-sm"
+                              )}
+                              onClick={() => setValue('selectedCarId', car.id)}
+                            >
+                              {watchedValues.selectedCarId === car.id && (
+                                <div className="absolute -right-2 -top-2 rounded-full bg-primary p-1 text-primary-foreground shadow-lg">
+                                  <Check className="h-4 w-4" />
+                                </div>
+                              )}
+                              <div className="aspect-video mb-4 overflow-hidden rounded-lg bg-secondary/50">
+                                <img
+                                  src={car.image}
+                                  alt={car.name}
+                                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                />
+                              </div>
+                              <h3 className="font-heading font-semibold text-lg">{car.name}</h3>
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-secondary/30 px-2 py-1 rounded">
+                                  <Users className="h-3 w-3" /> {car.seats}
+                                </span>
+                                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-secondary/30 px-2 py-1 rounded">
+                                  <Star className="h-3 w-3 fill-primary/20 text-primary" /> 4.9
+                                </span>
+                              </div>
+                              <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+                                <span className="text-xl font-bold text-primary">₹{car.pricePerDay}</span>
+                                <span className="text-xs text-muted-foreground">per day</span>
+                              </div>
+                            </motion.div>
+                          ))
+                        )}
                       </div>
                       {errors.selectedCarId && (
                         <p className="text-sm text-destructive">{errors.selectedCarId.message}</p>
@@ -490,7 +703,7 @@ export const BookingForm = () => {
                       className="space-y-6"
                     >
                       <h3 className="text-xl font-heading font-semibold text-foreground">Enhance Your Experience</h3>
-                      
+
                       <div className="grid sm:grid-cols-2 gap-3">
                         {additionalServicesData.map((service) => (
                           <label
@@ -619,6 +832,10 @@ export const BookingForm = () => {
                     </div>
 
                     <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Distance</span>
+                        <span>{distance > 0 ? `${distance} km` : '-'}</span>
+                      </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Base Rental</span>
                         <span>₹{basePrice.toLocaleString()}</span>
